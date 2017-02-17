@@ -1,11 +1,7 @@
 import { DB, QueryArg } from "./db";
 import * as SQL from "mssql";
 import { Request } from "mssql";
-import * as config from "../db.config";
-import { Queries } from "./Queries";
-import { Vehicle } from "../model/vehicle";
 import { GPSEntry } from "../model/gps-entry";
-import { primary } from "../db.config";
 import { MongoClient, ObjectID, Db } from "mongodb";
 import * as fs from "fs";
 import * as path from "path";

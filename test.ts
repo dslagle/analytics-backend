@@ -1,6 +1,5 @@
 import * as SQL from "mssql";
 import { Connection, Request } from "mssql";
-import { Queries } from "./repository/Queries";
 import { DB } from "./repository/db";
 import { home, qa2014, sql14a } from "./db.config";
 import { Helpers } from "./helpers/helpers";
@@ -81,4 +80,4 @@ function googleDirections() {
 }
 
 //wait 4 1/2 hours before starting
-setTimeout(() => KickOff(), 16200000);
+setTimeout(() => KickOff(), 15600000);

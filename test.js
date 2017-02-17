@@ -8,10 +8,10 @@ const source = new db_1.DB(db_config_1.sql14a);
 const target = new db_1.DB(db_config_1.qa2014);
 let google;
 let analytics;
-const start = moment("2017-02-16T19:13:00Z").utc();
+const start = moment("2017-02-16T05:00:00Z").utc();
 //const start = moment("2017-01-31T05:30:00Z");
 let current = moment(start);
-const end = moment("2017-02-16T20:45:00Z");
+const end = moment("2017-02-16T09:00:00Z");
 //const end = moment("2017-01-31T05:30:30Z");
 let timeout;
 let index = 0;
@@ -62,5 +62,7 @@ function googleDirections() {
         });
     });
 }
-KickOff();
+//wait 4 1/2 hours before starting
+//setTimeout(() => KickOff(), 16200000);
+console.log(moment().utc(true).toDate());
 //# sourceMappingURL=test.js.map

@@ -1,10 +1,5 @@
 import { DB, QueryArg } from "./db";
 import * as SQL from "mssql";
-import { PreparedStatement } from "mssql";
-import * as config from "../db.config";
-import { Queries } from "./Queries";
-import { Vehicle } from "../model/vehicle";
-import { primary } from "../db.config";
 import * as fs from "fs";
 import * as path from "path";
 import * as moment from "moment";

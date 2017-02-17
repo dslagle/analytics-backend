@@ -4,6 +4,7 @@ const db_1 = require("../repository/db");
 const db_config_1 = require("../db.config");
 const helpers_1 = require("../helpers/helpers");
 const vehicle_repository_1 = require("../repository/vehicle.repository");
+const analytics_repository_1 = require("../repository/analytics.repository");
 const run_repository_1 = require("../repository/run.repository");
 const route_repository_1 = require("../repository/route.repository");
 const moment = require("moment");
@@ -14,11 +15,13 @@ const db = new db_1.DB(db_config_1.primary);
 let vehicleRepo;
 let runRepo;
 let routeRepo;
+let analyticsRepo;
 let model;
 let data;
 let server;
 init();
 function init() {
+    const dbAnalytics = new db_1.DB(db_config_1.qa2014);
     const db = new db_1.DB(db_config_1.home);
     // server.on("connect", (socket) => {
     //     console.log("Connected!");
@@ -26,12 +29,13 @@ function init() {
     //         console.log("Disconnected!");
     //     });
     // });
-    db.Connect()
+    Promise.all([db.Connect(), dbAnalytics.Connect()])
         .then(() => {
         console.log("Connected to RM");
         vehicleRepo = new vehicle_repository_1.VehicleRepository(db);
         runRepo = new run_repository_1.RunRepository(db);
         routeRepo = new route_repository_1.RouteRepository(db);
+        analyticsRepo = new analytics_repository_1.AnalyticsRepository(dbAnalytics);
         // vehicleRepo.GetAllVehicleGPS().then(d => {
         //     server.emit("updateGPS");
         // });
@@ -163,14 +167,14 @@ router.get("/routes/:date/:id/patterns", function (request, response) {
 router.get("/analytics/eta/patterns", function (request, response) {
     const date = request.query.date ? moment(+request.query.date).utc() : moment().startOf('day').utc(true);
     const threshold = +request.query.threshold || 5;
-    routeRepo.ListETAAnalyticsForRoutePatterns(date, threshold)
+    analyticsRepo.ListETAAnalyticsForRoutePatterns(date, threshold)
         .then(data => response.json(data))
         .catch(err => response.status(501).json({ error: err }));
 });
 router.get("/analytics/eta/patterns/stops/:id", function (request, response) {
     const date = request.query.date ? moment(+request.query.date).utc() : moment().startOf('day').utc(true);
     const id = +request.params.id;
-    routeRepo.ListGPSForPatternStop(date, id)
+    analyticsRepo.ListGPSForPatternStop(date, id)
         .then(data => response.json({ stops: data[0], trips: data[1], gps: helpers_1.Helpers.GroupArray(data[2], '') }))
         .catch(err => response.status(501).json({ error: err }));
 });
@@ -178,7 +182,7 @@ router.get("/analytics/eta/patterns/:id", function (request, response) {
     const id = +request.params.id;
     const date = request.query.date ? moment(+request.query.date).utc() : moment().startOf('day').utc(true);
     const threshold = +request.query.threshold || 5;
-    routeRepo.ListETAAnalyticsForRoutePattern(date, threshold, id)
+    analyticsRepo.ListETAAnalyticsForRoutePattern(date, threshold, id)
         .then(data => response.json(data))
         .catch(err => response.status(501).json({ error: err }));
 });
