@@ -11,7 +11,6 @@ class AnalyticsRepository {
         this.db = db;
     }
     GetETACalcs(from) {
-        console.log(from.toDate());
         const inputs = [
             { name: "FromDateTime", type: SQL.DateTime, value: from.toDate() }
         ];

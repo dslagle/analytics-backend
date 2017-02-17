@@ -13,8 +13,6 @@ export class AnalyticsRepository {
     constructor(private db: DB) { }
 
     GetETACalcs(from: moment.Moment): Promise<any[]> {
-        console.log(from.toDate());
-        
         const inputs: QueryArg[] = [
             { name: "FromDateTime", type: SQL.DateTime, value: from.toDate() }
         ];
