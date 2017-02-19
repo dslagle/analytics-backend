@@ -4,7 +4,9 @@ const fs = require("fs");
 const path = require("path");
 const qGetETACalcs = fs.readFileSync(path.join(__dirname, "../sql/GetETACalcs.sql")).toString();
 const qPatternETAAnalytics = fs.readFileSync(path.join(__dirname, "../sql/routes/route-pattern-eta-analytics.sql")).toString();
+const qPatternETAAnalyticsGoogle = fs.readFileSync(path.join(__dirname, "../sql/routes/pattern-analytics-google.sql")).toString();
 const qStopETAAnalyticsByPattern = fs.readFileSync(path.join(__dirname, "../sql/routes/stop-eta-analytics-by-pattern.sql")).toString();
+const qStopETAAnalyticsByPatternGoogle = fs.readFileSync(path.join(__dirname, "../sql/routes/stop-analytics-google.sql")).toString();
 const qGPSForPatternStop = fs.readFileSync(path.join(__dirname, "../sql/routes/gps-for-pattern-stop.sql")).toString();
 class AnalyticsRepository {
     constructor(db) {
@@ -21,7 +23,7 @@ class AnalyticsRepository {
             { name: "Date", type: SQL.DateTime, value: date.toDate() },
             { name: "Threshold", type: SQL.Int, value: threshold }
         ];
-        return this.db.Query(qPatternETAAnalytics, inputs);
+        return this.db.Query(qPatternETAAnalyticsGoogle, inputs);
     }
     ListETAAnalyticsForRoutePattern(date, threshold, id) {
         const inputs = [
@@ -29,7 +31,7 @@ class AnalyticsRepository {
             { name: "Threshold", type: SQL.Int, value: threshold },
             { name: "SubrouteID", type: SQL.Int, value: id }
         ];
-        return this.db.Query(qStopETAAnalyticsByPattern, inputs);
+        return this.db.Query(qStopETAAnalyticsByPatternGoogle, inputs);
     }
     ListGPSForPatternStop(date, id) {
         const inputs = [

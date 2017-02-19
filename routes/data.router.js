@@ -165,14 +165,15 @@ router.get("/routes/:date/:id/patterns", function (request, response) {
         .catch(err => response.status(501).json({ error: err }));
 });
 router.get("/analytics/eta/patterns", function (request, response) {
-    const date = request.query.date ? moment(+request.query.date).utc() : moment().startOf('day').utc(true);
+    const date = request.query.date ? moment(+request.query.date).utc(true) : moment().startOf('day').utc(true);
     const threshold = +request.query.threshold || 5;
+    console.log(date.format());
     analyticsRepo.ListETAAnalyticsForRoutePatterns(date, threshold)
         .then(data => response.json(data))
         .catch(err => response.status(501).json({ error: err }));
 });
 router.get("/analytics/eta/patterns/stops/:id", function (request, response) {
-    const date = request.query.date ? moment(+request.query.date).utc() : moment().startOf('day').utc(true);
+    const date = request.query.date ? moment(+request.query.date).utc(true) : moment().startOf('day').utc(true);
     const id = +request.params.id;
     analyticsRepo.ListGPSForPatternStop(date, id)
         .then(data => response.json({ stops: data[0], trips: data[1], gps: helpers_1.Helpers.GroupArray(data[2], '') }))

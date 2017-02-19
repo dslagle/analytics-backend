@@ -1,18 +1,5 @@
 
-
--- SELECT
---     MIN(D.NextStopName) Destination,
---     Min(D.StopOrder) StopOrder,
---     AVG(D.ETAOffMinutes) Diff,
---     MIN(D.NextStopScheduled) Scheduled,
---     MIN(D.NextStopArrive) Actual
--- FROM DJS_ETA_DATA D
--- WHERE D.ETAOffMinutes > 5 AND D.NextStopArrive > D.NextStopScheduled
---     AND CHARINDEX('P&R', D.NextStopName) = 0
--- GROUP BY D.NextStopDailyID
--- ORDER BY Scheduled
-
---DECLARE @FromDateTime DATETIME = '2017-01-31 05:30:00'
+--DECLARE @FromDateTime DATETIME = '2017-02-17 14:30:00'
 --DECLARE @ToDateTime DATETIME = DATEADD(SECOND, 5, @FromDateTime)--'2017-01-31 05:30:31'
 
 SELECT

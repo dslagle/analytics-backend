@@ -6,7 +6,9 @@ import * as moment from "moment";
 
 const qGetETACalcs: string = fs.readFileSync(path.join(__dirname, "../sql/GetETACalcs.sql")).toString();
 const qPatternETAAnalytics = fs.readFileSync(path.join(__dirname, "../sql/routes/route-pattern-eta-analytics.sql")).toString();
+const qPatternETAAnalyticsGoogle = fs.readFileSync(path.join(__dirname, "../sql/routes/pattern-analytics-google.sql")).toString();
 const qStopETAAnalyticsByPattern = fs.readFileSync(path.join(__dirname, "../sql/routes/stop-eta-analytics-by-pattern.sql")).toString();
+const qStopETAAnalyticsByPatternGoogle = fs.readFileSync(path.join(__dirname, "../sql/routes/stop-analytics-google.sql")).toString();
 const qGPSForPatternStop = fs.readFileSync(path.join(__dirname, "../sql/routes/gps-for-pattern-stop.sql")).toString();
 
 export class AnalyticsRepository {
@@ -26,7 +28,7 @@ export class AnalyticsRepository {
             { name: "Threshold", type: SQL.Int, value: threshold }
         ];
 
-        return this.db.Query(qPatternETAAnalytics, inputs);
+        return this.db.Query(qPatternETAAnalyticsGoogle, inputs);
     }
 
     ListETAAnalyticsForRoutePattern(date: moment.Moment, threshold: number, id: number): Promise<any> {
@@ -36,7 +38,7 @@ export class AnalyticsRepository {
             { name: "SubrouteID", type: SQL.Int, value: id }
         ];
 
-        return this.db.Query(qStopETAAnalyticsByPattern, inputs);
+        return this.db.Query(qStopETAAnalyticsByPatternGoogle, inputs);
     }
 
     ListGPSForPatternStop(date: moment.Moment, id: number): Promise<any> {
