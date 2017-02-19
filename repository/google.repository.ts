@@ -3,8 +3,10 @@ import * as SQL from "mssql";
 import * as fs from "fs";
 import * as path from "path";
 import * as moment from "moment";
+import Axios from "axios";
 
 const key = "AIzaSyA3PCYWq3Dj7YpI2xlimqVxGi8igFmsPbs";
+const base = `https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&traffic_model=best_guess&key=${key}`;
 
 const googleMapsClient = require('@google/maps').createClient({ key });
 
@@ -16,7 +18,7 @@ export class GoogleRepository {
     constructor(private db: DB) { }
 
     SaveDMResult(queryID: string, result: any): Promise<any> {
-        const data = result.rows[0].elements[0];
+        const data = result;
 
         const inputs: QueryArg[] = [
             { name: "QueryID", type: SQL.VarChar, value: queryID },
@@ -40,16 +42,11 @@ export class GoogleRepository {
 
     DistanceMatrixRequest(origin: any, destination: any): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            googleMapsClient.distanceMatrix(
-                {
-                    origins: [ origin ],
-                    destinations: [ destination ],
-                    departure_time: moment().toDate(),
-                    traffic_model: "best_guess",
-                    units: "imperial"
-                },
-                (err, result) => { if (err) reject(err); else resolve(result.json); }
-            );
+            const url = `${base}&origins=${origin.lat},${origin.lng}&destinations=${destination.lat},${destination.lng}&departure_time=${moment().valueOf()}`;
+            
+            Axios.get(url)
+                .then(response => resolve(response.data.rows[0].elements[0]))
+                .catch(err => reject(err));
         });
     }
 }
