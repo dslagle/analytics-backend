@@ -26,9 +26,26 @@ function objectToArray(obj, filter = (i) => true) {
             arr.push(obj[key]);
     return arr;
 }
+function memoize(keyGen = (args) => args.reduce((a1, a2) => `${a1},${a2}`)) {
+    return function (target, key, descriptor) {
+        const store = {};
+        return {
+            value: function (...args) {
+                const key = keyGen(args);
+                if (store[key]) {
+                    return store[key];
+                }
+                const result = descriptor.value.call(this, ...args);
+                store[key] = result;
+                return result;
+            }
+        };
+    };
+}
 exports.Helpers = {
     ArrayToObject: arrayToObject,
     ObjectToArray: objectToArray,
-    GroupArray: groupArray
+    GroupArray: groupArray,
+    memoize: memoize
 };
 //# sourceMappingURL=helpers.js.map

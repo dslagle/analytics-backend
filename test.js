@@ -1,4 +1,13 @@
 "use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 const db_1 = require("./repository/db");
 const db_config_1 = require("./db.config");
 const google_repository_1 = require("./repository/google.repository");
@@ -11,8 +20,8 @@ const source = new db_1.DB(db_config_1.home);
 const target = new db_1.DB(db_config_1.home);
 let google;
 let analytics;
-//const start = moment().utc(true);
-const start = moment("2017-01-31T17:00:00Z").utc();
+const start = moment().utc(true);
+//const start = moment("2017-01-31T17:00:00Z").utc();
 //const start = moment("2017-01-31T05:30:00Z");
 let current = moment(start);
 //const end = moment("2017-01-31T06:10:00Z");
@@ -66,5 +75,37 @@ function googleDirections() {
         timeout = setTimeout(() => googleDirections(), 5000);
     });
 }
-KickOff();
+//KickOff();
+function memoize(keyGen = (args) => args.reduce((a1, a2) => `${a1},${a2}`)) {
+    return function (target, key, descriptor) {
+        const store = {};
+        return {
+            value: function (...args) {
+                const key = keyGen(args);
+                if (store[key]) {
+                    console.log("Memoized!");
+                    return store[key];
+                }
+                const result = descriptor.value.call(this, ...args);
+                store[key] = result;
+                return result;
+            }
+        };
+    };
+}
+class Test {
+    test(first, second) {
+        return `${first}, ${second}`;
+    }
+}
+__decorate([
+    memoize(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], Test.prototype, "test", null);
+const t = new Test();
+console.log(t.test("one", "two"));
+console.log(t.test("three", "four"));
+console.log(t.test("one", "two"));
 //# sourceMappingURL=test.js.map

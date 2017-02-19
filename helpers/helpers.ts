@@ -24,8 +24,28 @@ function objectToArray(obj: any, filter: (item: any) => boolean = (i) => true) {
     return arr;
 }
 
+function memoize(keyGen: (args: any[]) => string = (args) => args.reduce((a1, a2) => `${a1},${a2}`)) {
+    return function(target: any, key: string, descriptor: any) {
+        const store: any = {};
+        return {
+            value: function (...args: any[]) {
+                const key = keyGen(args);
+
+                if (store[key]) {
+                    return store[key];
+                }
+
+                const result = descriptor.value.call(this, ...args);
+                store[key] = result;
+                return result;
+            }
+        };
+    };
+}
+
 export const Helpers = {
     ArrayToObject: arrayToObject,
     ObjectToArray: objectToArray,
-    GroupArray: groupArray
+    GroupArray: groupArray,
+    memoize: memoize
 };

@@ -200,6 +200,15 @@ router.get("/routes/:date/:id/patterns", function(request, response) {
         .catch(err => response.status(501).json({ error: err }));
 });
 
+router.get("/analytics/eta/summary", function(request, response) {
+    const date: moment.Moment = request.query.date ? moment(+request.query.date).utc(true) : moment().startOf('day').utc(true);
+    const threshold: number = +request.query.threshold || 5;
+
+    analyticsRepo.ETASummary(date, threshold)
+        .then(data => response.json(data))
+        .catch(err => response.status(501).json({ error: err }));
+});
+
 router.get("/analytics/eta/patterns", function(request, response) {
     const date: moment.Moment = request.query.date ? moment(+request.query.date).utc(true) : moment().startOf('day').utc(true);
     const threshold: number = +request.query.threshold || 5;
@@ -220,7 +229,7 @@ router.get("/analytics/eta/patterns/stops/:id", function(request, response) {
 
 router.get("/analytics/eta/patterns/:id", function(request, response) {
     const id: number = +request.params.id;
-    const date: moment.Moment = request.query.date ? moment(+request.query.date).utc() : moment().startOf('day').utc(true);
+    const date: moment.Moment = request.query.date ? moment(+request.query.date).utc(true) : moment().startOf('day').utc(true);
     const threshold: number = +request.query.threshold || 5;
 
     analyticsRepo.ListETAAnalyticsForRoutePattern(date, threshold, id)

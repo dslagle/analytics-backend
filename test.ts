@@ -90,4 +90,38 @@ function googleDirections() {
         });
 }
 
-KickOff();
+//KickOff();
+
+
+function memoize(keyGen: (args: any[]) => string = (args) => args.reduce((a1, a2) => `${a1},${a2}`)) {
+    return function(target: any, key: string, descriptor: any) {
+        const store: any = {};
+        return {
+            value: function (...args: any[]) {
+                const key = keyGen(args);
+
+                if (store[key]) {
+                    console.log("Memoized!");
+                    return store[key];
+                }
+
+                const result = descriptor.value.call(this, ...args);
+                store[key] = result;
+                return result;
+            }
+        };
+    };
+}
+
+class Test {
+    @memoize()
+    test(first, second) {
+        return `${first}, ${second}`;
+    }
+}
+
+const t = new Test();
+
+console.log(t.test("one", "two"));
+console.log(t.test("three", "four"));
+console.log(t.test("one", "two"));

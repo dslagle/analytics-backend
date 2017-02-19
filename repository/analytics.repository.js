@@ -1,13 +1,33 @@
 "use strict";
+var __assign = (this && this.__assign) || Object.assign || function(t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+        s = arguments[i];
+        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+            t[p] = s[p];
+    }
+    return t;
+};
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+const helpers_1 = require("../helpers/helpers");
 const SQL = require("mssql");
 const fs = require("fs");
 const path = require("path");
+const moment = require("moment");
 const qGetETACalcs = fs.readFileSync(path.join(__dirname, "../sql/GetETACalcs.sql")).toString();
 const qPatternETAAnalytics = fs.readFileSync(path.join(__dirname, "../sql/routes/route-pattern-eta-analytics.sql")).toString();
 const qPatternETAAnalyticsGoogle = fs.readFileSync(path.join(__dirname, "../sql/routes/pattern-analytics-google.sql")).toString();
 const qStopETAAnalyticsByPattern = fs.readFileSync(path.join(__dirname, "../sql/routes/stop-eta-analytics-by-pattern.sql")).toString();
 const qStopETAAnalyticsByPatternGoogle = fs.readFileSync(path.join(__dirname, "../sql/routes/stop-analytics-google.sql")).toString();
 const qGPSForPatternStop = fs.readFileSync(path.join(__dirname, "../sql/routes/gps-for-pattern-stop.sql")).toString();
+const qETASummary = fs.readFileSync(path.join(__dirname, "../sql/analytics/analytics-summary.sql")).toString();
 class AnalyticsRepository {
     constructor(db) {
         this.db = db;
@@ -17,6 +37,53 @@ class AnalyticsRepository {
             { name: "FromDateTime", type: SQL.DateTime, value: from.toDate() }
         ];
         return this.db.Query(qGetETACalcs, inputs);
+    }
+    ETASummary(date, threshold) {
+        const inputs10 = [
+            { name: "min", type: SQL.Int, value: 60 * 9 },
+            { name: "max", type: SQL.Int, value: 60 * 11 },
+            { name: "threshold", type: SQL.Int, value: threshold * 60 },
+            { name: "Date", type: SQL.DateTime, value: date.toDate() }
+        ];
+        const inputs30 = [
+            { name: "min", type: SQL.Int, value: 60 * 29 },
+            { name: "max", type: SQL.Int, value: 60 * 31 },
+            { name: "threshold", type: SQL.Int, value: threshold * 60 },
+            { name: "Date", type: SQL.DateTime, value: date.toDate() }
+        ];
+        const q1 = this.db.QueryMultiple(qETASummary, inputs10);
+        const q2 = this.db.QueryMultiple(qETASummary, inputs30);
+        return new Promise((resolve, reject) => {
+            Promise.all([q1, q2])
+                .then(results => {
+                const margin10 = results[0];
+                const margin30 = results[1];
+                const answer = {
+                    10: {
+                        routematch: {
+                            byStop: __assign({}, margin10[0][0]),
+                            byPoint: __assign({}, margin10[1][0])
+                        },
+                        google: {
+                            byStop: __assign({}, margin10[2][0]),
+                            byPoint: __assign({}, margin10[3][0])
+                        }
+                    },
+                    30: {
+                        routematch: {
+                            byStop: __assign({}, margin30[0][0]),
+                            byPoint: __assign({}, margin30[1][0])
+                        },
+                        google: {
+                            byStop: __assign({}, margin30[2][0]),
+                            byPoint: __assign({}, margin30[3][0])
+                        }
+                    }
+                };
+                resolve(answer);
+            })
+                .catch(err => reject(err));
+        });
     }
     ListETAAnalyticsForRoutePatterns(date, threshold) {
         const inputs = [
@@ -41,5 +108,23 @@ class AnalyticsRepository {
         return this.db.QueryMultiple(qGPSForPatternStop, inputs);
     }
 }
+__decorate([
+    helpers_1.Helpers.memoize(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number]),
+    __metadata("design:returntype", Promise)
+], AnalyticsRepository.prototype, "ETASummary", null);
+__decorate([
+    helpers_1.Helpers.memoize(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number]),
+    __metadata("design:returntype", Promise)
+], AnalyticsRepository.prototype, "ListETAAnalyticsForRoutePatterns", null);
+__decorate([
+    helpers_1.Helpers.memoize(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Number]),
+    __metadata("design:returntype", Promise)
+], AnalyticsRepository.prototype, "ListETAAnalyticsForRoutePattern", null);
 exports.AnalyticsRepository = AnalyticsRepository;
 //# sourceMappingURL=analytics.repository.js.map

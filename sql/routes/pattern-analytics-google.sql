@@ -70,4 +70,5 @@ SELECT
 	SUM(T.GoogleOver2) GoogleOver2
 FROM @temp T
 	JOIN ETA_DATA_Subroutes SR ON SR.SubrouteID = T.SubrouteID
+		AND SR.TripDate = @date
 GROUP BY T.SubrouteID, SR.SubrouteName

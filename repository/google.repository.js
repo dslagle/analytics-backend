@@ -35,21 +35,9 @@ class GoogleRepository {
     DistanceMatrixRequest(origin, destination) {
         return new Promise((resolve, reject) => {
             const url = `${base}&origins=${origin.lat},${origin.lng}&destinations=${destination.lat},${destination.lng}&departure_time=${moment().valueOf()}`;
-            //console.log(url);
-            //resolve({ duration: { value: 100 }, duration_in_traffic: { value: 200 }, distance: { value: 50 } });
             axios_1.default.get(url)
                 .then(response => resolve(response.data.rows[0].elements[0]))
                 .catch(err => reject(err));
-            // googleMapsClient.distanceMatrix(
-            //     {
-            //         origins: [ origin ],
-            //         destinations: [ destination ],
-            //         departure_time: moment().toDate(),
-            //         traffic_model: "best_guess",
-            //         units: "imperial"
-            //     },
-            //     (err, result) => { if (err) reject(err); else resolve(result.json.rows[0].elements[0]); }
-            // );
         });
     }
 }

@@ -1,7 +1,6 @@
 
 --DECLARE @Threshold INT = 5;
 --DECLARE @Date DATETIME = '2017-02-16'
-DECLARE @Day INT = DATEPART(DW, @Date)
 --DECLARE @SubrouteID INT = 3745
 
 DECLARE @temp TABLE (
@@ -49,6 +48,7 @@ SELECT
 FROM ETA_DATA_Calculations D
     JOIN ETA_DATA_GoogleResult G ON G.QueryID = D.QueryID
     JOIN ETA_DATA_ActualStops S ON S.DailyStopID = D.NextStopDailyID
+		AND S.TripDate = @Date
     JOIN ETA_DATA_Trips T ON T.DailyTripID = S.DailyTripID
 WHERE ActualTravelTime IS NOT NULL AND T.SubrouteID = @SubrouteID
 GROUP BY S.SubrouteStopID
@@ -77,3 +77,4 @@ FROM @temp T
     JOIN ETA_DATA_ActualStops S ON S.DailyStopID = T.DailyStopID
     JOIN ETA_DATA_Trips Trip ON Trip.DailyTripID = S.DailyTripID
     JOIN ETA_DATA_Subroutes SR ON SR.SubrouteID = Trip.SubrouteID
+		AND SR.TripDate = Trip.TripDate
