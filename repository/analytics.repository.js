@@ -38,6 +38,28 @@ class AnalyticsRepository {
         ];
         return this.db.Query(qGetETACalcs, inputs);
     }
+    ETASummaryForRange(date, threshold, min, max) {
+        const inputs = [
+            { name: "min", type: SQL.Int, value: 60 * min },
+            { name: "max", type: SQL.Int, value: 60 * max },
+            { name: "threshold", type: SQL.Int, value: threshold * 60 },
+            { name: "Date", type: SQL.DateTime, value: date.toDate() }
+        ];
+        return this.db.QueryMultiple(qETASummary, inputs)
+            .then(data => {
+            const answer = {
+                routematch: {
+                    byStop: __assign({}, data[0][0]),
+                    byPoint: __assign({}, data[1][0])
+                },
+                google: {
+                    byStop: __assign({}, data[2][0]),
+                    byPoint: __assign({}, data[3][0])
+                }
+            };
+            return Promise.resolve(answer);
+        });
+    }
     ETASummary(date, threshold) {
         const inputs10 = [
             { name: "min", type: SQL.Int, value: 60 * 9 },
@@ -53,36 +75,33 @@ class AnalyticsRepository {
         ];
         const q1 = this.db.QueryMultiple(qETASummary, inputs10);
         const q2 = this.db.QueryMultiple(qETASummary, inputs30);
-        return new Promise((resolve, reject) => {
-            Promise.all([q1, q2])
-                .then(results => {
-                const margin10 = results[0];
-                const margin30 = results[1];
-                const answer = {
-                    10: {
-                        routematch: {
-                            byStop: __assign({}, margin10[0][0]),
-                            byPoint: __assign({}, margin10[1][0])
-                        },
-                        google: {
-                            byStop: __assign({}, margin10[2][0]),
-                            byPoint: __assign({}, margin10[3][0])
-                        }
+        return Promise.all([q1, q2])
+            .then(results => {
+            const margin10 = results[0];
+            const margin30 = results[1];
+            const answer = {
+                10: {
+                    routematch: {
+                        byStop: __assign({}, margin10[0][0]),
+                        byPoint: __assign({}, margin10[1][0])
                     },
-                    30: {
-                        routematch: {
-                            byStop: __assign({}, margin30[0][0]),
-                            byPoint: __assign({}, margin30[1][0])
-                        },
-                        google: {
-                            byStop: __assign({}, margin30[2][0]),
-                            byPoint: __assign({}, margin30[3][0])
-                        }
+                    google: {
+                        byStop: __assign({}, margin10[2][0]),
+                        byPoint: __assign({}, margin10[3][0])
                     }
-                };
-                resolve(answer);
-            })
-                .catch(err => reject(err));
+                },
+                30: {
+                    routematch: {
+                        byStop: __assign({}, margin30[0][0]),
+                        byPoint: __assign({}, margin30[1][0])
+                    },
+                    google: {
+                        byStop: __assign({}, margin30[2][0]),
+                        byPoint: __assign({}, margin30[3][0])
+                    }
+                }
+            };
+            return Promise.resolve(answer);
         });
     }
     ListETAAnalyticsForRoutePatterns(date, threshold) {
@@ -108,6 +127,12 @@ class AnalyticsRepository {
         return this.db.QueryMultiple(qGPSForPatternStop, inputs);
     }
 }
+__decorate([
+    helpers_1.Helpers.memoize(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Number, Number]),
+    __metadata("design:returntype", void 0)
+], AnalyticsRepository.prototype, "ETASummaryForRange", null);
 __decorate([
     helpers_1.Helpers.memoize(),
     __metadata("design:type", Function),

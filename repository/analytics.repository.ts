@@ -25,6 +25,41 @@ export class AnalyticsRepository {
     }
 
     @Helpers.memoize()
+    ETASummaryForRange(date: moment.Moment, threshold: number, min: number, max: number)
+    {
+        const inputs: QueryArg[] = [
+            { name: "min", type: SQL.Int, value: 60*min },
+            { name: "max", type: SQL.Int, value: 60*max },
+            { name: "threshold", type: SQL.Int, value: threshold*60 },
+            { name: "Date", type: SQL.DateTime, value: date.toDate() }
+        ];
+
+        return this.db.QueryMultiple(qETASummary, inputs)
+            .then(data => {
+                const answer = {
+                    routematch: {
+                        byStop: {
+                            ...data[0][0]
+                        },
+                        byPoint: {
+                            ...data[1][0]
+                        }
+                    },
+                    google: {
+                        byStop: {
+                            ...data[2][0]
+                        },
+                        byPoint: {
+                            ...data[3][0]
+                        }
+                    }
+                };
+
+                return Promise.resolve(answer);
+            })
+    }
+
+    @Helpers.memoize()
     ETASummary(date: moment.Moment, threshold: number): Promise<any> {
         const inputs10: QueryArg[] = [
             { name: "min", type: SQL.Int, value: 60*9 },
@@ -43,57 +78,52 @@ export class AnalyticsRepository {
         const q1 = this.db.QueryMultiple(qETASummary, inputs10);
         const q2 = this.db.QueryMultiple(qETASummary, inputs30);
 
-        return new Promise<any>((resolve, reject) => {
-            Promise.all([q1, q2])
-                .then(results => {
-                    const margin10 = results[0];
-                    const margin30 = results[1];
+        return Promise.all([q1, q2])
+            .then(results => {
+                const margin10 = results[0];
+                const margin30 = results[1];
 
-
-
-                    const answer = {
-                        10: {
-                            routematch: {
-                                byStop: {
-                                    ...margin10[0][0]
-                                },
-                                byPoint: {
-                                    ...margin10[1][0]
-                                }
+                const answer = {
+                    10: {
+                        routematch: {
+                            byStop: {
+                                ...margin10[0][0]
                             },
-                            google: {
-                                byStop: {
-                                    ...margin10[2][0]
-                                },
-                                byPoint: {
-                                    ...margin10[3][0]
-                                }
+                            byPoint: {
+                                ...margin10[1][0]
                             }
                         },
-                        30: {
-                            routematch: {
-                                byStop: {
-                                    ...margin30[0][0]
-                                },
-                                byPoint: {
-                                    ...margin30[1][0]
-                                }
+                        google: {
+                            byStop: {
+                                ...margin10[2][0]
                             },
-                            google: {
-                                byStop: {
-                                    ...margin30[2][0]
-                                },
-                                byPoint: {
-                                    ...margin30[3][0]
-                                }
+                            byPoint: {
+                                ...margin10[3][0]
                             }
                         }
-                    };
+                    },
+                    30: {
+                        routematch: {
+                            byStop: {
+                                ...margin30[0][0]
+                            },
+                            byPoint: {
+                                ...margin30[1][0]
+                            }
+                        },
+                        google: {
+                            byStop: {
+                                ...margin30[2][0]
+                            },
+                            byPoint: {
+                                ...margin30[3][0]
+                            }
+                        }
+                    }
+                };
 
-                    resolve(answer);
-                })
-                .catch(err => reject(err));
-        });
+                return Promise.resolve(answer);
+            });
     }
 
     @Helpers.memoize()

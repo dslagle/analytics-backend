@@ -171,6 +171,15 @@ router.get("/analytics/eta/summary", function (request, response) {
         .then(data => response.json(data))
         .catch(err => response.status(501).json({ error: err }));
 });
+router.get("/analytics/eta/rangesummary", function (request, response) {
+    const date = request.query.date ? moment(+request.query.date).utc(true) : moment().startOf('day').utc(true);
+    const threshold = +request.query.threshold || 5;
+    const min = +(request.query.min || 9);
+    const max = +(request.query.max || 11);
+    analyticsRepo.ETASummaryForRange(date, threshold, min, max)
+        .then(data => response.json(data))
+        .catch(err => response.status(501).json({ error: err }));
+});
 router.get("/analytics/eta/patterns", function (request, response) {
     const date = request.query.date ? moment(+request.query.date).utc(true) : moment().startOf('day').utc(true);
     const threshold = +request.query.threshold || 5;

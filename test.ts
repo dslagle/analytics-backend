@@ -10,7 +10,6 @@ import * as fs from "fs";
 import * as path from "path";
 
 const numeral = require("numeraljs");
-const heap = require("heapdump");
 
 //const source = new DB(sql14a);
 const source = new DB(home);
@@ -92,36 +91,7 @@ function googleDirections() {
 
 //KickOff();
 
-
-function memoize(keyGen: (args: any[]) => string = (args) => args.reduce((a1, a2) => `${a1},${a2}`)) {
-    return function(target: any, key: string, descriptor: any) {
-        const store: any = {};
-        return {
-            value: function (...args: any[]) {
-                const key = keyGen(args);
-
-                if (store[key]) {
-                    console.log("Memoized!");
-                    return store[key];
-                }
-
-                const result = descriptor.value.call(this, ...args);
-                store[key] = result;
-                return result;
-            }
-        };
-    };
-}
-
-class Test {
-    @memoize()
-    test(first, second) {
-        return `${first}, ${second}`;
-    }
-}
-
-const t = new Test();
-
-console.log(t.test("one", "two"));
-console.log(t.test("three", "four"));
-console.log(t.test("one", "two"));
+new Promise<number>((resolve, reject) => {
+    setTimeout(() => resolve(5), 2000);
+}).then(value => { return new Promise((res, rej) => res(value*2)); })
+    .then(value => console.log(value));
