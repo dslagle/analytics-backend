@@ -8,12 +8,16 @@ SELECT
     O.OnRouteLongitude OriginLng,
     A.Ycoordinate DestinationLat,
     A.Xcoordinate DestinationLng,
-    GPS.ActualDateTime
+    GPS.ActualDateTime,
+    GPS.ReceivedDateTime,
+    O.InsertDateTime
 FROM GetRouteStatus_Output O
     JOIN tblStreetRouteActual GPS ON GPS.Transaction_Tracking_value = O.QueryID
     JOIN tblActualFRRouteStopTimes AST ON AST.DailyTimetableID = O.DailyTimeTableID
     JOIN tblAddress A ON AST.AddressID = A.AddressID
-WHERE GPS.ActualDateTime > @FromDateTime
+WHERE O.InsertDateTime > @FromDateTime
+--WHERE GPS.ActualDateTime > @FromDateTime
+    --AND GPS.ReceivedDateTime <= @ToDateTime
     --AND GPS.ActualDateTime <= @ToDateTime
 -- WHERE DATEADD(HOUR, -5, O.InsertDateTime) > @FromDateTime
 --     AND DATEADD(HOUR, -5, O.InsertDateTime) < @ToDateTime

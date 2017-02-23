@@ -32,12 +32,22 @@ class GoogleRepository {
         ];
         return this.db.Query(qSaveError, inputs);
     }
-    DistanceMatrixRequest(origin, destination) {
+    DistanceMatrixRequest(origin, destination, retryCount = 3, retryDelay = 100) {
         return new Promise((resolve, reject) => {
             const url = `${base}&origins=${origin.lat},${origin.lng}&destinations=${destination.lat},${destination.lng}&departure_time=${moment().valueOf()}`;
-            axios_1.default.get(url)
-                .then(response => resolve(response.data.rows[0].elements[0]))
-                .catch(err => reject(err));
+            this.DistanceMatrixRequestWithRetry(url, retryCount, retryDelay, resolve, reject);
+        });
+    }
+    DistanceMatrixRequestWithRetry(url, retryCount, retryDelay, resolve, reject) {
+        axios_1.default.get(url)
+            .then(response => resolve(response.data.rows[0].elements[0]))
+            .catch(err => {
+            if (retryCount > 0) {
+                this.SaveError(`Error Calling Google: Retrying ${retryCount} time${retryCount === 1 ? "" : "s"}`);
+                setTimeout(() => this.DistanceMatrixRequestWithRetry(url, --retryCount, retryDelay, resolve, reject), retryDelay);
+            }
+            else
+                reject(err);
         });
     }
 }

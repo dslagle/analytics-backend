@@ -25,8 +25,7 @@ export class AnalyticsRepository {
     }
 
     @Helpers.memoize()
-    ETASummaryForRange(date: moment.Moment, threshold: number, min: number, max: number)
-    {
+    ETASummaryForRange(date: moment.Moment, threshold: number, min: number, max: number) : Promise<any> {
         const inputs: QueryArg[] = [
             { name: "min", type: SQL.Int, value: 60*min },
             { name: "max", type: SQL.Int, value: 60*max },
@@ -61,22 +60,8 @@ export class AnalyticsRepository {
 
     @Helpers.memoize()
     ETASummary(date: moment.Moment, threshold: number): Promise<any> {
-        const inputs10: QueryArg[] = [
-            { name: "min", type: SQL.Int, value: 60*9 },
-            { name: "max", type: SQL.Int, value: 60*11 },
-            { name: "threshold", type: SQL.Int, value: threshold*60 },
-            { name: "Date", type: SQL.DateTime, value: date.toDate() }
-        ];
-
-        const inputs30: QueryArg[] = [
-            { name: "min", type: SQL.Int, value: 60*29 },
-            { name: "max", type: SQL.Int, value: 60*31 },
-            { name: "threshold", type: SQL.Int, value: threshold*60 },
-            { name: "Date", type: SQL.DateTime, value: date.toDate() }
-        ];
-
-        const q1 = this.db.QueryMultiple(qETASummary, inputs10);
-        const q2 = this.db.QueryMultiple(qETASummary, inputs30);
+        const q1 = this.ETASummaryForRange(date, threshold, 9, 11);
+        const q2 = this.ETASummaryForRange(date, threshold, 29, 31);
 
         return Promise.all([q1, q2])
             .then(results => {
@@ -84,42 +69,8 @@ export class AnalyticsRepository {
                 const margin30 = results[1];
 
                 const answer = {
-                    10: {
-                        routematch: {
-                            byStop: {
-                                ...margin10[0][0]
-                            },
-                            byPoint: {
-                                ...margin10[1][0]
-                            }
-                        },
-                        google: {
-                            byStop: {
-                                ...margin10[2][0]
-                            },
-                            byPoint: {
-                                ...margin10[3][0]
-                            }
-                        }
-                    },
-                    30: {
-                        routematch: {
-                            byStop: {
-                                ...margin30[0][0]
-                            },
-                            byPoint: {
-                                ...margin30[1][0]
-                            }
-                        },
-                        google: {
-                            byStop: {
-                                ...margin30[2][0]
-                            },
-                            byPoint: {
-                                ...margin30[3][0]
-                            }
-                        }
-                    }
+                    10: { ...results[0] },
+                    30: { ...results[1] }
                 };
 
                 return Promise.resolve(answer);
