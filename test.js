@@ -40,7 +40,15 @@ function googleDirections(time) {
             const origin = { lat: d.OriginLat, lng: d.OriginLng };
             const destination = { lat: d.DestinationLat, lng: d.DestinationLng };
             google.DistanceMatrixRequest(origin, destination)
-                .then(data => { return google.SaveDMResult(d.QueryID, data).catch(err => google.SaveError(`Error Saving Google Result: ${err}`)); })
+                .then(data => {
+                if (data.status == "OVER_QUERY_LIMIT") {
+                    //stop processing when we hit the google limit
+                    google.SaveError("Error calling google: Query limit reached")
+                        .then((err) => process.exit(0));
+                }
+                return google.SaveDMResult(d.QueryID, data)
+                    .catch(err => google.SaveError(`Error Saving Google Result: ${err}`));
+            })
                 .then(() => googleSuccessCount += 1)
                 .catch(err => google.SaveError(`Error Calling Google: ${err}`, d.QueryID));
         });
