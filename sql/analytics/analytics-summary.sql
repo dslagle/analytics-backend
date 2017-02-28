@@ -25,8 +25,8 @@ SELECT
 	S.SubrouteStopID,
 	S.DailyStopID,
 	COUNT(*),
-	AVG(CASE WHEN C.EstimatedTravelTime > C.ActualTravelTime THEN C.EstimatedTravelTime - C.ActualTravelTime ELSE 0 END),
-	AVG(CASE WHEN C.EstimatedTravelTime < C.ActualTravelTime THEN C.EstimatedTravelTime - C.ActualTravelTime ELSE 0 END)
+	AVG(CASE WHEN C.EstimatedTravelTime > C.ActualTravelTime THEN C.EstimatedTravelTime - C.ActualTravelTime ELSE NULL END),
+	AVG(CASE WHEN C.EstimatedTravelTime < C.ActualTravelTime THEN C.EstimatedTravelTime - C.ActualTravelTime ELSE NULL END)
 FROM ETA_DATA_Calculations C
 	JOIN ETA_DATA_ActualStops S ON S.DailyStopID = C.NextStopDailyID
 		AND S.TripDate = @date
@@ -40,8 +40,8 @@ SELECT
 	S.SubrouteStopID,
 	S.DailyStopID,
 	COUNT(*),
-	AVG(CASE WHEN G.EstimatedTravelTimeInTraffic >= C.ActualTravelTime THEN G.EstimatedTravelTimeInTraffic - C.ActualTravelTime ELSE 0 END),
-	AVG(CASE WHEN G.EstimatedTravelTimeInTraffic < C.ActualTravelTime THEN G.EstimatedTravelTimeInTraffic - C.ActualTravelTime ELSE 0 END)
+	AVG(CASE WHEN G.EstimatedTravelTimeInTraffic >= C.ActualTravelTime THEN G.EstimatedTravelTimeInTraffic - C.ActualTravelTime ELSE NULL END),
+	AVG(CASE WHEN G.EstimatedTravelTimeInTraffic < C.ActualTravelTime THEN G.EstimatedTravelTimeInTraffic - C.ActualTravelTime ELSE NULL END)
 FROM ETA_DATA_Calculations C
 	JOIN ETA_DATA_ActualStops S ON S.DailyStopID = C.NextStopDailyID
 		AND S.TripDate = @date
@@ -87,9 +87,9 @@ SELECT
         ELSE NULL
     END PercentOnTime,
 
-	AVG(CASE WHEN C.EstimatedTravelTime > C.ActualTravelTime THEN C.EstimatedTravelTime - C.ActualTravelTime ELSE 0 END) AverageOver,
-	AVG(CASE WHEN C.EstimatedTravelTime < C.ActualTravelTime THEN C.EstimatedTravelTime - C.ActualTravelTime ELSE 0 END) AverageUnder,
-	MIN(CASE WHEN C.EstimatedTravelTime > C.ActualTravelTime THEN C.EstimatedTravelTime - C.ActualTravelTime ELSE 0 END) MaxOver,
+	AVG(CASE WHEN C.EstimatedTravelTime > C.ActualTravelTime THEN C.EstimatedTravelTime - C.ActualTravelTime ELSE NULL END) AverageOver,
+	AVG(CASE WHEN C.EstimatedTravelTime < C.ActualTravelTime THEN C.EstimatedTravelTime - C.ActualTravelTime ELSE NULL END) AverageUnder,
+	MAX(CASE WHEN C.EstimatedTravelTime > C.ActualTravelTime THEN C.EstimatedTravelTime - C.ActualTravelTime ELSE 0 END) MaxOver,
 	MIN(CASE WHEN C.EstimatedTravelTime < C.ActualTravelTime THEN C.EstimatedTravelTime - C.ActualTravelTime ELSE 0 END) MaxUnder
 FROM ETA_DATA_Calculations C
 	JOIN ETA_DATA_ActualStops S ON S.DailyStopID = C.NextStopDailyID
@@ -133,9 +133,9 @@ SELECT
         ELSE NULL
     END PercentOnTime,
 
-	AVG(CASE WHEN G.EstimatedTravelTimeInTraffic > C.ActualTravelTime THEN G.EstimatedTravelTimeInTraffic - C.ActualTravelTime ELSE 0 END) AverageOver,
-	AVG(CASE WHEN G.EstimatedTravelTimeInTraffic < C.ActualTravelTime THEN G.EstimatedTravelTimeInTraffic - C.ActualTravelTime ELSE 0 END) AverageUnder,
-	MIN(CASE WHEN G.EstimatedTravelTimeInTraffic > C.ActualTravelTime THEN G.EstimatedTravelTimeInTraffic - C.ActualTravelTime ELSE 0 END) MaxOver,
+	AVG(CASE WHEN G.EstimatedTravelTimeInTraffic > C.ActualTravelTime THEN G.EstimatedTravelTimeInTraffic - C.ActualTravelTime ELSE NULL END) AverageOver,
+	AVG(CASE WHEN G.EstimatedTravelTimeInTraffic < C.ActualTravelTime THEN G.EstimatedTravelTimeInTraffic - C.ActualTravelTime ELSE NULL END) AverageUnder,
+	MAX(CASE WHEN G.EstimatedTravelTimeInTraffic > C.ActualTravelTime THEN G.EstimatedTravelTimeInTraffic - C.ActualTravelTime ELSE 0 END) MaxOver,
 	MIN(CASE WHEN G.EstimatedTravelTimeInTraffic < C.ActualTravelTime THEN G.EstimatedTravelTimeInTraffic - C.ActualTravelTime ELSE 0 END) MaxUnder
 FROM ETA_DATA_Calculations C
 	JOIN ETA_DATA_ActualStops S ON S.DailyStopID = C.NextStopDailyID
