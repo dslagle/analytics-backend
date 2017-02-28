@@ -43,6 +43,8 @@ function googleDirections(time) {
                 .then(data => {
                 if (data.status == "OVER_QUERY_LIMIT") {
                     //stop processing when we hit the google limit
+                    clearTimeout(timeout);
+                    console.log("Reached Google Query Limit");
                     google.SaveError("Error calling google: Query limit reached")
                         .then((err) => process.exit(0));
                 }
@@ -64,7 +66,7 @@ function googleDirections(time) {
         timeout = setTimeout(() => googleDirections(next), 5000);
     });
 }
-const waitTime = 500; //2*60*60*1000;
+const waitTime = 3 * 60 * 60 * 1000;
 const startTime = moment().add(waitTime, 'milliseconds');
 console.log("Waiting... Scheduled Start: " + startTime.format("hh:mm:ss"));
 setTimeout(KickOff, waitTime);
