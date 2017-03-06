@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { Model } from "../model/model";
 import { DB } from "../repository/db";
-import { primary, home, qa2014 } from "../db.config";
+import { sql14a, home, qa2014 } from "../db.config";
 import * as SQL from "mssql";
 import { Connection, Request } from "mssql";
 import { TripRouter } from "./trip.router";
@@ -18,7 +18,7 @@ import * as moment from "moment";
 const apiKey = "AIzaSyA3PCYWq3Dj7YpI2xlimqVxGi8igFmsPbs";
 
 const router = Router();
-const db = new DB(primary);
+
 let vehicleRepo: VehicleRepository;
 let runRepo: RunRepository;
 let routeRepo: RouteRepository;
@@ -32,7 +32,7 @@ init();
 
 function init() {
     const dbAnalytics = new DB(qa2014);
-    const db = new DB(home);
+    const db = new DB(sql14a);
 
     // server.on("connect", (socket) => {
     //     console.log("Connected!");
@@ -216,6 +216,32 @@ router.get("/analytics/eta/rangesummary", function(request, response) {
     const max = +(request.query.max || 11);
 
     analyticsRepo.ETASummaryForRange(date, threshold, min, max)
+        .then(data => response.json(data))
+        .catch(err => response.status(501).json({ error: err }));
+});
+
+router.get("/analytics/missedstops", function(request, response) {
+    const start = request.query.start ? moment(+request.query.start).utc() : moment().startOf('month').utc(true);
+    const end = request.query.end ? moment(+request.query.end).utc() : moment().endOf('month').utc(true);
+
+    routeRepo.MissedStopCount(start, end)
+        .then(data => response.json(Helpers.ArrayToObject(data, "CalendarDate", (k) => moment(k).utc().valueOf())))
+        .catch(err => response.status(501).json({ error: err }));
+});
+
+router.get("/analytics/missedstops/:date", function(request, response) {
+    const date = moment(+request.params.date).utc();
+    
+    routeRepo.MissedStopsForDate(date)
+        .then(data => response.json(data))
+        .catch(err => response.status(501).json({ error: err }));
+});
+
+router.get("/analytics/missedstopdetails/:id", function(request, response) {
+    const id = +request.params.id;
+    const date = moment(+request.query.date).utc();
+
+    routeRepo.MissedStopDetails(date, id)
         .then(data => response.json(data))
         .catch(err => response.status(501).json({ error: err }));
 });

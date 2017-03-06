@@ -11,7 +11,6 @@ const moment = require("moment");
 //import { googleDirections } from "../test";
 const apiKey = "AIzaSyA3PCYWq3Dj7YpI2xlimqVxGi8igFmsPbs";
 const router = express_1.Router();
-const db = new db_1.DB(db_config_1.primary);
 let vehicleRepo;
 let runRepo;
 let routeRepo;
@@ -22,7 +21,7 @@ let server;
 init();
 function init() {
     const dbAnalytics = new db_1.DB(db_config_1.qa2014);
-    const db = new db_1.DB(db_config_1.home);
+    const db = new db_1.DB(db_config_1.sql14a);
     // server.on("connect", (socket) => {
     //     console.log("Connected!");
     //     socket.on("disconnect", () => {
@@ -177,6 +176,26 @@ router.get("/analytics/eta/rangesummary", function (request, response) {
     const min = +(request.query.min || 9);
     const max = +(request.query.max || 11);
     analyticsRepo.ETASummaryForRange(date, threshold, min, max)
+        .then(data => response.json(data))
+        .catch(err => response.status(501).json({ error: err }));
+});
+router.get("/analytics/missedstops", function (request, response) {
+    const start = request.query.start ? moment(+request.query.start).utc() : moment().startOf('month').utc(true);
+    const end = request.query.end ? moment(+request.query.end).utc() : moment().endOf('month').utc(true);
+    routeRepo.MissedStopCount(start, end)
+        .then(data => response.json(helpers_1.Helpers.ArrayToObject(data, "CalendarDate", (k) => moment(k).utc().valueOf())))
+        .catch(err => response.status(501).json({ error: err }));
+});
+router.get("/analytics/missedstops/:date", function (request, response) {
+    const date = moment(+request.params.date).utc();
+    routeRepo.MissedStopsForDate(date)
+        .then(data => response.json(data))
+        .catch(err => response.status(501).json({ error: err }));
+});
+router.get("/analytics/missedstopdetails/:id", function (request, response) {
+    const id = +request.params.id;
+    const date = moment(+request.query.date).utc();
+    routeRepo.MissedStopDetails(date, id)
         .then(data => response.json(data))
         .catch(err => response.status(501).json({ error: err }));
 });
