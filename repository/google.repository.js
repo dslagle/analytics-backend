@@ -15,7 +15,7 @@ class GoogleRepository {
         this.db = db;
     }
     SaveDMResult(queryID, result) {
-        const data = result;
+        const data = result.rows[0].elements[0];
         const inputs = [
             { name: "QueryID", type: SQL.VarChar, value: queryID },
             { name: "TravelTime", type: SQL.Int, value: data.duration.value },
@@ -32,7 +32,7 @@ class GoogleRepository {
         ];
         return this.db.Query(qSaveError, inputs);
     }
-    DistanceMatrixRequest(origin, destination, retryCount = 3, retryDelay = 100) {
+    DistanceMatrixRequest(origin, destination, retryCount = 0, retryDelay = 100) {
         return new Promise((resolve, reject) => {
             const url = `${base}&origins=${origin.lat},${origin.lng}&destinations=${destination.lat},${destination.lng}&departure_time=${moment().valueOf()}`;
             this.DistanceMatrixRequestWithRetry(url, retryCount, retryDelay, resolve, reject);
@@ -40,7 +40,7 @@ class GoogleRepository {
     }
     DistanceMatrixRequestWithRetry(url, retryCount, retryDelay, resolve, reject) {
         axios_1.default.get(url)
-            .then(response => resolve(response.data.rows[0].elements[0]))
+            .then(response => resolve(response.data))
             .catch(err => {
             if (retryCount > 0) {
                 this.SaveError(`Error Calling Google: Retrying ${retryCount} time${retryCount === 1 ? "" : "s"}`);

@@ -1,8 +1,8 @@
 
--- DECLARE @date DATETIME = '2017-02-17'
--- DECLARE @threshold INT = 3*60
--- DECLARE @min INT = 60*9
--- DECLARE @max INT = 60*11
+--  DECLARE @date DATETIME = '2017-02-16'
+--  DECLARE @threshold INT = 3*60
+--  DECLARE @min INT = 60*19
+--  DECLARE @max INT = 60*21
 
 DECLARE @averagesByStop TABLE (
 	SubrouteStopID INT,
@@ -62,7 +62,7 @@ SELECT
         ELSE NULL
     END PercentUnder,
 	CASE WHEN COUNT(*) > 0
-    	THEN COUNT(CASE WHEN SecondsOver <= @threshold AND SecondsUnder >= -@threshold THEN 1 ELSE NULL END) / CAST(COUNT(*) AS FLOAT)
+    	THEN COUNT(CASE WHEN ISNULL(SecondsOver, 0) <= @threshold AND ISNULL(SecondsUnder, 0) >= -@threshold THEN 1 ELSE NULL END) / CAST(COUNT(*) AS FLOAT)
         ELSE NULL
     END PercentOnTime,
 	
@@ -108,7 +108,7 @@ SELECT
         ELSE NULL
     END PercentUnder,
 	CASE WHEN COUNT(*) > 0
-    	THEN COUNT(CASE WHEN SecondsOver <= @threshold AND SecondsUnder >= -@threshold THEN 1 ELSE NULL END) / CAST(COUNT(*) AS FLOAT)
+    	THEN COUNT(CASE WHEN ISNULL(SecondsOver, 0) <= @threshold AND ISNULL(SecondsUnder, 0) >= -@threshold THEN 1 ELSE NULL END) / CAST(COUNT(*) AS FLOAT)
         ELSE NULL
     END PercentOnTime,
 

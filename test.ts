@@ -88,26 +88,8 @@ function googleDirections(time) {
         });
 }
 
-const waitTime = 3*60*60*1000;
+const waitTime = 4*60*60*1000;
 const startTime = moment().add(waitTime, 'milliseconds');
 
-// console.log("Waiting... Scheduled Start: " + startTime.format("hh:mm:ss"));
-// setTimeout(KickOff, waitTime);
-
-// const d = moment("2017-02-23T14:00:00.341Z");
-// console.log(d.toDate());
-// test.Connect()
-//     .then(() => test.Query(fs.readFileSync(path.join(__dirname, "sql/VH.sql")).toString(), [{ name: "date", type: SQL.DateTime, value: d.toDate() }]))
-//     .then(data => console.log(data));
-
-console.log(moment(1480550400000).utc().format());
-
-const t = {
-    a: "blue",
-    b: "red",
-    c: "green"
-}
-
-for (let key in t) {
-    console.log(key);
-}
+console.log("Waiting... Scheduled Start: " + startTime.format("hh:mm:ss"));
+setTimeout(KickOff, waitTime);
