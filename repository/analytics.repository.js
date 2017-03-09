@@ -22,6 +22,7 @@ const fs = require("fs");
 const path = require("path");
 const moment = require("moment");
 const qGetETACalcs = fs.readFileSync(path.join(__dirname, "../sql/GetETACalcs.sql")).toString();
+const qGetETACalcsWithLRPoints = fs.readFileSync(path.join(__dirname, "../sql/GetETACalcsWithLRPoints.sql")).toString();
 const qPatternETAAnalytics = fs.readFileSync(path.join(__dirname, "../sql/routes/route-pattern-eta-analytics.sql")).toString();
 const qPatternETAAnalyticsGoogle = fs.readFileSync(path.join(__dirname, "../sql/routes/pattern-analytics-google.sql")).toString();
 const qStopETAAnalyticsByPattern = fs.readFileSync(path.join(__dirname, "../sql/routes/stop-eta-analytics-by-pattern.sql")).toString();
@@ -37,6 +38,12 @@ class AnalyticsRepository {
             { name: "FromDateTime", type: SQL.DateTime, value: from.toDate() }
         ];
         return this.db.Query(qGetETACalcs, inputs);
+    }
+    GetETACalcsWithLRPoints(from) {
+        const inputs = [
+            { name: "FromDateTime", type: SQL.DateTime, value: from.toDate() }
+        ];
+        return this.db.QueryMultiple(qGetETACalcsWithLRPoints, inputs);
     }
     ETASummaryForRange(date, threshold, min, max) {
         const inputs = [

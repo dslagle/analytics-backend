@@ -12,84 +12,142 @@ import * as path from "path";
 
 const numeral = require("numeraljs");
 
-const source = new DB(sql14a);
-const target = new DB(qa2014);
+function runTimes(date: moment.Moment) {
+    return [
+        { start: moment(date).startOf('day').add(4, 'hours').add(30, 'minutes'), end: moment(date).startOf('day').add(11, 'hours') },
+        { start: moment(date).startOf('day').add(16, 'hours'), end: moment(date).startOf('day').add(21, 'hours') }
+    ];
+}
 
-const test = new DB(home);
-
-// const source = new DB(home);
-// const target = new DB(home);
+let source: DB;
+let target: DB;
 
 let google: GoogleRepository;
 let analytics: AnalyticsRepository;
-
-//const start = moment("2017-01-31T17:00:00Z").utc();
-//const start = moment("2017-01-31T05:30:00Z");
-//const end = moment("2017-01-31T06:10:00Z");
-//const end = moment("2017-01-31T05:30:30Z");
 
 let timeout: any;
 let total: number = 0;
 let googleSuccessCount = 0;
 
-function KickOff() {
+function KickOff(start: moment.Moment, end: moment.Moment) {
+    source = new DB(sql14a);
+    target = new DB(qa2014);
+
     Promise.all([source.Connect(), target.Connect()])
         .then(() => {
             console.log("Connected!");
-            const start = moment().utc(true).add(5, 'hours');
-            //const start = moment("2017-01-31T17:00:00Z").utc();
-            
+
             google = new GoogleRepository(target);
             analytics = new AnalyticsRepository(source);
 
-            googleDirections(start);
+            googleDirectionsWithWaypoints(start, end);
         })
-        //.then(() => { console.log("Done!"); target.Close(); source.Close(); })
         .catch(err => { console.log(err); target.Close(); source.Close(); });
 }
 
-function googleDirections(time) {
-    analytics.GetETACalcs(time)
+function KickOffTest(start: moment.Moment, end: moment.Moment) {
+    source = new DB(sql14a);
+    target = new DB(home);
+
+    Promise.all([source.Connect(), target.Connect()])
+        .then(() => {
+            console.log("Connected!");
+            const start = moment("2017-03-08 08:00:00").utc(true);
+
+            google = new GoogleRepository(target);
+            analytics = new AnalyticsRepository(source);
+
+            googleDirectionsWithWaypoints(start, moment(start).add(10, 'seconds'));
+        })
+        .catch(err => { console.log(err); target.Close(); source.Close(); });
+}
+
+function DMRequest(origin: any, destination: any, QueryID: string, google: GoogleRepository) {
+    google.DistanceMatrixRequest(origin, destination)
+        .then(result => {
+            if (result.data.status == "OVER_QUERY_LIMIT") {
+                //stop processing when we hit the google limit
+                clearTimeout(timeout);
+                console.log("Reached Google Query Limit");
+                google.SaveError("Error calling google: Query limit reached")
+                    .then((err) => process.exit(0));
+            }
+            return google.SaveDMResult(QueryID, result.data, result.url)
+                .catch(err => google.SaveError(`Error Saving Google Result: ${err}`))
+        })
+        .catch(err => google.SaveError(`Error Calling Google: ${err}`, QueryID));
+}
+
+function DirectionsRequest(origin: any, destination: any, QueryID: string, waypoints: any[], google: GoogleRepository) {
+    google.DirectionsRequest(origin, destination, waypoints)
         .then(data => {
-            total += data.length;
-            console.log(`Memory Used: ${numeral(process.memoryUsage().heapUsed).format("0.00 b")}, [${data.length}]: ${time.format("HH:mm:ss.SSS")}, Total: ${total}, Google: ${googleSuccessCount}`);
+            if (data.status == "OVER_QUERY_LIMIT") {
+                //stop processing when we hit the google limit
+                clearTimeout(timeout); //this is not gauranteed
+                console.log("Reached Google Query Limit");
+                google.SaveError("Error calling google: Query limit reached")
+                    .then((err) => process.exit(0));
+            }
+            else if (data.status != "OK") {
+                google.SaveError("Error calling directions: " + JSON.stringify(data), QueryID);
+                return;
+            }
+
+            return google.SaveDirectionResult(QueryID, data)
+                .catch(err => google.SaveError(`Error Saving Google Result: ${err}`))
+        })
+        .catch(err => google.SaveError(`Error Calling Google: ${err}`, QueryID));
+}
+
+function googleDirectionsWithWaypoints(start: moment.Moment, end: moment.Moment) {
+    analytics.GetETACalcsWithLRPoints(start)
+        .then(data => {
+            const results = data[0];
+            const waypoints = Helpers.GroupArray(data[1], "QueryID");
+
+            //safety net
+            if (results.length > 50) {
+                console.error("Something went wrong! " + results.length + " results were received!");
+                process.exit(0);
+            }
+
+            total += results.length;
+            console.log(`Memory Used: ${numeral(process.memoryUsage().heapUsed).format("0.00 b")}, [${results.length}]: ${start.format("HH:mm:ss.SSS")}, Total: ${total}, Google: ${googleSuccessCount}`);
             
-            data.forEach(d => {
+            results.forEach(d => {
                 const origin = { lat: d.OriginLat, lng: d.OriginLng };
                 const destination = { lat: d.DestinationLat, lng: d.DestinationLng };
                 
-                google.DistanceMatrixRequest(origin, destination)
-                    .then(data => {
-                        if (data.status == "OVER_QUERY_LIMIT") {
-                            //stop processing when we hit the google limit
-                            clearTimeout(timeout);
-                            console.log("Reached Google Query Limit");
-                            google.SaveError("Error calling google: Query limit reached")
-                                .then((err) => process.exit(0));
-                        }
-                        return google.SaveDMResult(d.QueryID, data)
-                            .catch(err => google.SaveError(`Error Saving Google Result: ${err}`))
-                    })
-                    .then(() => googleSuccessCount += 1)
-                    .catch(err => google.SaveError(`Error Calling Google: ${err}`, d.QueryID));
+                DMRequest(origin, destination, d.QueryID, google);
+                DirectionsRequest(origin, destination, d.QueryID, waypoints[d.QueryID], google);
             });
 
-            const next = moment(Math.max(...data.map(d => moment(d.InsertDateTime).valueOf()), time.valueOf())).utc().add(1, 'millisecond');
+            const next = moment(Math.max(...results.map(d => moment(d.InsertDateTime).valueOf()), start.valueOf())).utc().add(1, 'millisecond');
 
-            timeout = setTimeout(() => googleDirections(next), 5000);
+            if (next.valueOf() < end.valueOf()) {
+                timeout = setTimeout(() => googleDirectionsWithWaypoints(next, end), 5000);
+            } else {
+                console.log("End Time Reached");
+            }
         })
         .catch(err => {
-            google.SaveError(`Error Getting ETA Calcs: ${err}`).catch(err => console.log(err));
-            console.log("Error Logged");
+            google.SaveError(`Error Getting ETA Calcs: ${err}`);
+            
             //try again - we want to keep going even if some of the results fail
             // start 5 seconds in the future, ignoring what already failed
-            const next = moment(time).add(5, 'seconds');
-            timeout = setTimeout(() => googleDirections(next), 5000);
+            const next = moment(start).add(5, 'seconds');
+            timeout = setTimeout(() => googleDirectionsWithWaypoints(next, end), 5000);
         });
 }
 
-const waitTime = 4*60*60*1000;
-const startTime = moment().add(waitTime, 'milliseconds');
+function runETA(times: any[]) {
+    times.forEach(span => {
+        const waitTime = moment.duration(span.start.diff(moment().utc(true))).asMilliseconds();
 
-console.log("Waiting... Scheduled Start: " + startTime.format("hh:mm:ss"));
-setTimeout(KickOff, waitTime);
+        console.log(`Waiting... Running from ${span.start.format("HH:mm:ss")} to ${span.end.format("HH:mm:ss")}`);
+        setTimeout(() => KickOff(span.start, span.end), waitTime);
+    });
+}
+
+const times = runTimes(moment().utc(true));
+runETA(times);

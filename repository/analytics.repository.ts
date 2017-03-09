@@ -6,6 +6,8 @@ import * as path from "path";
 import * as moment from "moment";
 
 const qGetETACalcs: string = fs.readFileSync(path.join(__dirname, "../sql/GetETACalcs.sql")).toString();
+const qGetETACalcsWithLRPoints: string = fs.readFileSync(path.join(__dirname, "../sql/GetETACalcsWithLRPoints.sql")).toString();
+
 const qPatternETAAnalytics = fs.readFileSync(path.join(__dirname, "../sql/routes/route-pattern-eta-analytics.sql")).toString();
 const qPatternETAAnalyticsGoogle = fs.readFileSync(path.join(__dirname, "../sql/routes/pattern-analytics-google.sql")).toString();
 const qStopETAAnalyticsByPattern = fs.readFileSync(path.join(__dirname, "../sql/routes/stop-eta-analytics-by-pattern.sql")).toString();
@@ -22,6 +24,14 @@ export class AnalyticsRepository {
         ];
 
         return this.db.Query(qGetETACalcs, inputs);
+    }
+
+    GetETACalcsWithLRPoints(from: moment.Moment): Promise<any[]> {
+        const inputs: QueryArg[] = [
+            { name: "FromDateTime", type: SQL.DateTime, value: from.toDate() }
+        ];
+
+        return this.db.QueryMultiple(qGetETACalcsWithLRPoints, inputs);
     }
 
     @Helpers.memoize()
