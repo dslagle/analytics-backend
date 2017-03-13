@@ -1,8 +1,7 @@
 
---DECLARE @FromDateTime DATETIME = '2017'
-
 DECLARE @From DATETIME = DATEADD(HOUR, 5, @FromDateTime)
-DECLARE @To DATETIME = DATEADD(SECOND, 5, @From)
+DECLARE @Date DATETIME = DATEADD(dd, 0, DATEDIFF(dd, 0, @FromDateTime))
+--DECLARE @To DATETIME = DATEADD(SECOND, 5, @From)
 
 DECLARE @calcs TABLE (
 	QueryID VARCHAR(50),
@@ -55,12 +54,13 @@ SELECT
 	ASTN.FRTripsPropertiesFRRouteStopID
 FROM GetRouteStatus_Output O
     JOIN tblStreetRouteActual GPS ON GPS.Transaction_Tracking_value = O.QueryID
+        AND GPS.ActualDateTime > @Date--for performance only
 	JOIN tblActualFRRouteStopTimes ASTN ON ASTN.DailyTimetableID = O.DailyTimeTableID
 	JOIN tblActualFRRouteStopTimes ASTP ON ASTP.DailyTripID = ASTN.DailyTripID
 		AND ASTP.StopOrder = ASTN.StopOrder - 1
     JOIN tblAddress A ON ASTN.AddressID = A.AddressID
 WHERE O.InsertDateTime > @From
-    AND O.InsertDateTime < @To
+    --AND O.InsertDateTime < @To
 	--AND O.QueryID = '087c6c1b-545a-42cf-b43b-ef16b3ca1634'
 
 INSERT INTO @result (QueryID, OriginLat, OriginLng, DestinationLat, DestinationLng, PreviousSubrouteStopID, NextSubrouteStopID, PreviousLongLatSequence, CurrentLongLatSequence, NextLongLatSequence)

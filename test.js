@@ -27,7 +27,7 @@ function KickOff(start, end) {
         console.log("Connected!");
         google = new google_repository_1.GoogleRepository(target);
         analytics = new analytics_repository_1.AnalyticsRepository(source);
-        googleDirectionsWithWaypoints(start, end);
+        googleDirections(start, end);
     })
         .catch(err => { console.log(err); target.Close(); source.Close(); });
 }
@@ -78,6 +78,39 @@ function DirectionsRequest(origin, destination, QueryID, waypoints, google) {
     })
         .catch(err => google.SaveError(`Error Calling Google: ${err}`, QueryID));
 }
+function googleDirections(start, end) {
+    analytics.GetETACalcs(start)
+        .then(data => {
+        const results = data;
+        //const waypoints = Helpers.GroupArray(data[1], "QueryID");
+        //safety net
+        // if (results.length > 50) {
+        //     console.error("Something went wrong! " + results.length + " results were received!");
+        //     process.exit(0);
+        // }
+        total += results.length;
+        console.log(`Memory Used: ${numeral(process.memoryUsage().heapUsed).format("0.00 b")}, [${results.length}]: ${start.format("HH:mm:ss.SSS")}, Total: ${total}, Google: ${googleSuccessCount}`);
+        results.forEach(d => {
+            const origin = { lat: d.OriginLat, lng: d.OriginLng };
+            const destination = { lat: d.DestinationLat, lng: d.DestinationLng };
+            DMRequest(origin, destination, d.QueryID, google);
+        });
+        const next = moment(Math.max(...results.map(d => moment(d.InsertDateTime).valueOf()), start.valueOf())).utc().add(1, 'millisecond');
+        if (next.valueOf() < end.valueOf()) {
+            timeout = setTimeout(() => googleDirections(next, end), 5000);
+        }
+        else {
+            console.log("End Time Reached");
+        }
+    })
+        .catch(err => {
+        google.SaveError(`Error Getting ETA Calcs: ${err}`);
+        //try again - we want to keep going even if some of the results fail
+        // start 5 seconds in the future, ignoring what already failed
+        const next = moment(start).add(5, 'seconds');
+        timeout = setTimeout(() => googleDirections(next, end), 5000);
+    });
+}
 function googleDirectionsWithWaypoints(start, end) {
     analytics.GetETACalcsWithLRPoints(start)
         .then(data => {
@@ -115,10 +148,12 @@ function googleDirectionsWithWaypoints(start, end) {
 function runETA(times) {
     times.forEach(span => {
         const waitTime = moment.duration(span.start.diff(moment().utc(true))).asMilliseconds();
-        console.log(`Waiting... Running from ${span.start.format("HH:mm:ss")} to ${span.end.format("HH:mm:ss")}`);
+        console.log(`Waiting... Running from ${span.start.format()} to ${span.end.format()}`);
         setTimeout(() => KickOff(span.start, span.end), waitTime);
     });
 }
 const times = runTimes(moment().utc(true));
-runETA(times);
+//runETA(times);
+//runETA([{ start: moment().utc(true).startOf('day').add(4, 'hours'), end: moment().utc(true).startOf('day').add(21, 'hours') }]);
+runETA([{ start: moment().utc(true).startOf('day').add(4, 'hours').add(30, 'minutes'), end: moment().utc(true).startOf('day').add(21, 'hours') }]);
 //# sourceMappingURL=test.js.map
