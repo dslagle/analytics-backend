@@ -192,6 +192,12 @@ router.get("/analytics/missedstops/:date", function (request, response) {
         .then(data => response.json(data))
         .catch(err => response.status(501).json({ error: err }));
 });
+router.get("/analytics/missedstopssummary/:date", function (request, response) {
+    const date = moment(+request.params.date).utc();
+    routeRepo.MissedStopSummaryForDate(date)
+        .then(data => response.json(data))
+        .catch(err => response.status(501).json({ error: err }));
+});
 router.get("/analytics/missedstopdetails/:id", function (request, response) {
     const id = +request.params.id;
     const date = moment(+request.query.date).utc();

@@ -12,6 +12,7 @@ const qPatterns = fs.readFileSync(path.join(__dirname, "../sql/routes/route-patt
 const qMissedStopsCount = fs.readFileSync(path.join(__dirname, "../sql/stops/missed-stop-count.sql")).toString();
 const qMissedStopsForDate = fs.readFileSync(path.join(__dirname, "../sql/stops/missed-stops-for-date.sql")).toString();
 const qMissedStopDetails = fs.readFileSync(path.join(__dirname, "../sql/stops/missed-stop-details.sql")).toString();
+const qMissedStopSummaryForDate = fs.readFileSync(path.join(__dirname, "../sql/stops/missed-info-for-date.sql")).toString();
 
 export class RouteRepository {
     constructor(private db: DB) { }
@@ -88,6 +89,16 @@ export class RouteRepository {
                 }
                 return Promise.resolve(srs);
             });
+    }
+
+    @Helpers.memoize()
+    MissedStopSummaryForDate(date: moment.Moment): Promise<any> {
+        const inputs: QueryArg[] = [
+            { name: "date", type: SQL.DateTime, value: date.toDate() }
+        ];
+
+        return this.db.Query<any>(qMissedStopSummaryForDate, inputs)
+            .then(d => { return d[0]; });
     }
 
     MissedStopDetails(date: moment.Moment, dailyStopID: number): Promise<any> {
