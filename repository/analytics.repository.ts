@@ -34,6 +34,14 @@ export class AnalyticsRepository {
         return this.db.QueryMultiple(qGetETACalcsWithLRPoints, inputs);
     }
 
+    StreamStops(date: moment.Moment) {
+        const inputs: QueryArg[] = [
+            { name: "date", type: SQL.DateTime, value: date.toDate() }
+        ];
+
+        return this.db.Query(qGetETACalcs, inputs);
+    }
+
     @Helpers.memoize()
     ETASummaryForRange(date: moment.Moment, threshold: number, min: number, max: number) : Promise<any> {
         const inputs: QueryArg[] = [
