@@ -2,6 +2,7 @@ import * as SQL from "mssql";
 import { Connection, Request, config, PreparedStatement } from "mssql";
 import * as assert from "assert";
 import * as fs from "fs";
+import { EventEmitter } from "events";
 
 export class QueryArg {
     name: string;
@@ -42,7 +43,7 @@ export class DB {
         });
     }
 
-    Stream<T>(command: string, args?: QueryArg[]): Request {
+    Stream<T>(command: string, args?: QueryArg[]): EventEmitter {
         const request: Request = new Request(this._connection);
         request.stream = true;
 
@@ -53,7 +54,7 @@ export class DB {
         }
 
         request.query<T>(command);
-        return request;
+        return <EventEmitter>request;
     }
 
     Query<T>(command: string, args?: QueryArg[]): Promise<T[]> {
