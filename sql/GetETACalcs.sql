@@ -1,8 +1,8 @@
 
---DECLARE @FromDateTime DATETIME = '2017-02-17 14:30:00'
+--DECLARE @FromDateTime DATETIME = '2017-03-13 16:25:00'
 --DECLARE @ToDateTime DATETIME = DATEADD(SECOND, 5, @FromDateTime)--'2017-01-31 05:30:31'
 
-DECLARE @From DATETIME = DATEADD(HOUR, 5, @FromDateTime)
+DECLARE @From DATETIME = DATEADD(HOUR, 4, @FromDateTime)
 DECLARE @Date DATETIME = DATEADD(dd, 0, DATEDIFF(dd, 0, @FromDateTime))
 
 SELECT
@@ -13,7 +13,7 @@ SELECT
     A.Xcoordinate DestinationLng,
     GPS.ActualDateTime,
     GPS.ReceivedDateTime,
-    DATEADD(HOUR, -5, O.InsertDateTime) InsertDateTime
+    DATEADD(HOUR, -4, O.InsertDateTime) InsertDateTime
 FROM GetRouteStatus_Output O
     JOIN tblStreetRouteActual GPS ON GPS.Transaction_Tracking_value = O.QueryID
         AND GPS.ActualDateTime > @Date--performance only
