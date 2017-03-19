@@ -1,7 +1,7 @@
 import { DB, QueryArg } from "./db";
 import * as SQL from "mssql";
 import * as config from "../db.config";
-import { Queries } from "./Queries";
+//import { Queries } from "./Queries";
 import { Vehicle } from "../model/vehicle";
 import { primary } from "../db.config";
 import * as fs from "fs";
@@ -10,19 +10,19 @@ import * as path from "path";
 export class VehicleRepository {
     constructor(private db: DB) { }
 
-    ListVehicles(): Promise<Vehicle[]> {
-        const db = new DB(primary);
+    // ListVehicles(): Promise<Vehicle[]> {
+    //     const db = new DB(primary);
 
-        return new Promise<Vehicle[]>((resolve, reject) => {
-            db.Connect()
-                .then(() => {
-                    db.Query(Queries.listVehiclesForCurrentDate)
-                        .then(data =>  { db.Close(); resolve(data.map(d => <Vehicle>d)) })
-                        .catch(err => { db.Close(); reject(err); })
-                })
-                .catch(err => reject(err));
-        });
-    }
+    //     return new Promise<Vehicle[]>((resolve, reject) => {
+    //         db.Connect()
+    //             .then(() => {
+    //                 db.Query(Queries.listVehiclesForCurrentDate)
+    //                     .then(data =>  { db.Close(); resolve(data.map(d => <Vehicle>d)) })
+    //                     .catch(err => { db.Close(); reject(err); })
+    //             })
+    //             .catch(err => reject(err));
+    //     });
+    // }
 
     GetAllVehicleGPS(lastGPSDateTime?: Date) {
         const query = fs.readFileSync(path.join(__dirname, "../sql/gps.sql")).toString();

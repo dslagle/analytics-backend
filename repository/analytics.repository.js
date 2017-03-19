@@ -16,6 +16,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+const db_1 = require("./db");
 const helpers_1 = require("../helpers/helpers");
 const SQL = require("mssql");
 const fs = require("fs");
@@ -23,6 +24,9 @@ const path = require("path");
 const moment = require("moment");
 const qGetETACalcs = fs.readFileSync(path.join(__dirname, "../sql/GetETACalcs.sql")).toString();
 const qGetETACalcsWithLRPoints = fs.readFileSync(path.join(__dirname, "../sql/GetETACalcsWithLRPoints.sql")).toString();
+const qQueriesForDate = fs.readFileSync(path.join(__dirname, "../sql/queries/GetQueriesForDate.sql")).toString();
+const qStopsForQuery = fs.readFileSync(path.join(__dirname, "../sql/queries/GetStopsForQuery.sql")).toString();
+const qStopsForQueries = fs.readFileSync(path.join(__dirname, "../sql/queries/GetStopsForQueries.sql")).toString();
 const qPatternETAAnalytics = fs.readFileSync(path.join(__dirname, "../sql/routes/route-pattern-eta-analytics.sql")).toString();
 const qPatternETAAnalyticsGoogle = fs.readFileSync(path.join(__dirname, "../sql/routes/pattern-analytics-google.sql")).toString();
 const qStopETAAnalyticsByPattern = fs.readFileSync(path.join(__dirname, "../sql/routes/stop-eta-analytics-by-pattern.sql")).toString();
@@ -45,11 +49,62 @@ class AnalyticsRepository {
         ];
         return this.db.QueryMultiple(qGetETACalcsWithLRPoints, inputs);
     }
+    // SaveETAToStopN(data: any) {
+    //     const inputs: QueryArg[] = [
+    //         { name: "QueryID", type: SQL.VarChar, value: data.QueryID },
+    //         { name: "DailyStopID", type: SQL.Int, value: data.DailyStopID },
+    //         { name: "ActualTravelTime", type: SQL.Int, value: data.ActualTravelTime },
+    //         //{ name: "EstimatedTravelTime", type: SQL.Int, value: data.EstimatedTravelTime },
+    //         { name: "ETA", type: SQL.DateTime, value: data.ETA }
+    //     ];
+    //     return this.db.Query<any>(qSaveETAtoStopN, inputs);
+    // }
+    SaveETAsToStopN(data) {
+        const stops = new SQL.Table("ETA_DATA_Calculations_StopETA");
+        stops.columns.add("QueryID", SQL.VarChar, __assign({}, db_1.DB.NotNullable, db_1.DB.PrimaryKey));
+        stops.columns.add("DailyStopID", SQL.Int, __assign({}, db_1.DB.NotNullable, db_1.DB.PrimaryKey));
+        stops.columns.add("ActualTravelTime", SQL.Int, db_1.DB.Nullable);
+        stops.columns.add("ETA", SQL.DateTime, db_1.DB.NotNullable);
+        stops.columns.add("EstimatedTravelTime", SQL.Int, db_1.DB.Nullable);
+        stops.columns.add("TotalDwellTime", SQL.Int, db_1.DB.Nullable);
+        stops.columns.add("TotalWaitTime", SQL.Int, db_1.DB.Nullable);
+        data.map(d => stops.rows.add(d.QueryID, d.DailyStopID, d.ActualTravelTime, d.ETA, null, null, null));
+        return this.db.BulkInsert(stops);
+    }
     StreamStops(date) {
         const inputs = [
             { name: "date", type: SQL.DateTime, value: date.toDate() }
         ];
         return this.db.Query(qGetETACalcs, inputs);
+    }
+    StreamQueriesForDate(date) {
+        const inputs = [
+            { name: "date", type: SQL.DateTime, value: date.toDate() }
+        ];
+        return this.db.Stream(qQueriesForDate, inputs);
+    }
+    QueriesForDate(date) {
+        const inputs = [
+            { name: "date", type: SQL.DateTime, value: date.toDate() }
+        ];
+        return this.db.Query(qQueriesForDate, inputs);
+    }
+    StopsForQuery(queryID) {
+        const inputs = [
+            { name: "queryID", type: SQL.VarChar, value: queryID }
+        ];
+        return this.db.Query(qStopsForQuery, inputs);
+    }
+    StopsForQueries(queryIDs) {
+        const idTable = new SQL.Table();
+        idTable.columns.add("ID", SQL.VarChar, db_1.DB.NotNullable);
+        queryIDs.map(id => idTable.rows.add(id));
+        const inputs = [
+            { name: "queryIDs", type: SQL.TVP, value: idTable }
+        ];
+        //console.log(qStopsForQueries);
+        return this.db.Execute("GetStopsForQueries", inputs)
+            .then(stops => { return helpers_1.Helpers.GroupArray(stops[0], "QueryID"); });
     }
     ETASummaryForRange(date, threshold, min, max) {
         const inputs = [

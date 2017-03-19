@@ -1,7 +1,6 @@
 "use strict";
 const db_1 = require("./db");
 const SQL = require("mssql");
-const Queries_1 = require("./Queries");
 const db_config_1 = require("../db.config");
 const fs = require("fs");
 const path = require("path");
@@ -9,18 +8,18 @@ class VehicleRepository {
     constructor(db) {
         this.db = db;
     }
-    ListVehicles() {
-        const db = new db_1.DB(db_config_1.primary);
-        return new Promise((resolve, reject) => {
-            db.Connect()
-                .then(() => {
-                db.Query(Queries_1.Queries.listVehiclesForCurrentDate)
-                    .then(data => { db.Close(); resolve(data.map(d => d)); })
-                    .catch(err => { db.Close(); reject(err); });
-            })
-                .catch(err => reject(err));
-        });
-    }
+    // ListVehicles(): Promise<Vehicle[]> {
+    //     const db = new DB(primary);
+    //     return new Promise<Vehicle[]>((resolve, reject) => {
+    //         db.Connect()
+    //             .then(() => {
+    //                 db.Query(Queries.listVehiclesForCurrentDate)
+    //                     .then(data =>  { db.Close(); resolve(data.map(d => <Vehicle>d)) })
+    //                     .catch(err => { db.Close(); reject(err); })
+    //             })
+    //             .catch(err => reject(err));
+    //     });
+    // }
     GetAllVehicleGPS(lastGPSDateTime) {
         const query = fs.readFileSync(path.join(__dirname, "../sql/gps.sql")).toString();
         return new Promise((resolve, reject) => {

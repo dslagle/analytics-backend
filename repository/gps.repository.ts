@@ -22,11 +22,11 @@ export class GPSRepository {
         });
     }
 
-    StreamGPS(): Request {
-        const query = fs.readFileSync(path.join(__dirname, "../gps.sql")).toString();
+    // StreamGPS(): Request {
+    //     const query = fs.readFileSync(path.join(__dirname, "../gps.sql")).toString();
         
-        return this.db.Stream<GPSEntry>(query);
-    }
+    //     return this.db.Stream<GPSEntry>(query);
+    // }
 
     WriteToMongo(gps: any) {
         const col = mongo.collection("gpsdebug");

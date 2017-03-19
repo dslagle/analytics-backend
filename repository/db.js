@@ -27,48 +27,43 @@ class DB {
                 .catch(err => reject(err));
         });
     }
+    BulkInsert(rows) {
+        const request = new mssql_1.Request(this._connection);
+        return request.bulk(rows);
+    }
     Stream(command, args) {
         const request = new mssql_1.Request(this._connection);
         request.stream = true;
-        if (args) {
-            for (const item of args) {
-                request.input(item.name, item.type, item.value);
-            }
-        }
-        request.query(command);
+        this.AddArgs(request, args).query(command);
         return request;
     }
     Query(command, args) {
         const request = new mssql_1.Request(this._connection);
-        if (args) {
-            for (const item of args) {
-                request.input(item.name, item.type, item.value);
-            }
-        }
-        return request.query(command);
+        return this.AddArgs(request, args).query(command);
     }
     QueryMultiple(command, args) {
         const request = new mssql_1.Request(this._connection);
         request.multiple = true;
-        if (args) {
-            for (const item of args) {
-                request.input(item.name, item.type, item.value);
-            }
-        }
-        return request.query(command);
+        return this.AddArgs(request, args).query(command);
     }
     Execute(sp, args) {
         const request = new mssql_1.Request(this._connection);
+        return this.AddArgs(request, args).execute(sp);
+    }
+    AddArgs(request, args) {
         if (args) {
             for (const item of args) {
                 request.input(item.name, item.type, item.value);
             }
         }
-        return request.execute(sp);
+        return request;
     }
     Close() {
         return this._connection.close();
     }
 }
+DB.NotNullable = { nullable: false };
+DB.Nullable = { nullable: true };
+DB.PrimaryKey = { primary: true };
 exports.DB = DB;
 //# sourceMappingURL=db.js.map

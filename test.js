@@ -152,8 +152,23 @@ function runETA(times) {
         setTimeout(() => KickOff(span.start, span.end), waitTime);
     });
 }
-const times = runTimes(moment().utc(true));
+//const times = runTimes(moment().utc(true));
 //runETA(times);
 //runETA([{ start: moment().utc(true).startOf('day').add(4, 'hours'), end: moment().utc(true).startOf('day').add(21, 'hours') }]);
-runETA([{ start: moment().utc(true).startOf('day').add(4, 'hours').add(30, 'minutes'), end: moment().utc(true).startOf('day').add(21, 'hours') }]);
+//runETA([{ start: moment().utc(true).startOf('day').add(4, 'hours').add(30, 'minutes'), end: moment().utc(true).startOf('day').add(21, 'hours') }]);
+function DoStuffToStuff() {
+    console.log(this.color);
+}
+class Test {
+    constructor() {
+        this.obj = {
+            color: 'blue',
+            flavor: 'chocolate'
+        };
+    }
+    DoStuff() {
+        DoStuffToStuff.call(this.obj);
+    }
+}
+new Test().DoStuff();
 //# sourceMappingURL=test.js.map

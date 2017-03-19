@@ -80,13 +80,13 @@ router.get("/", function (request, response) {
 //         .then(data => response.json(data))
 //         .catch(err => response.json({ error: err }));
 // });
-router.get("/vehicle", function (request, response) {
-    vehicleRepo.ListVehicles()
-        .then(list => {
-        response.json(list);
-    })
-        .catch(err => response.status(404).json({ error: err }));
-});
+// router.get("/vehicle", function(request, response) {
+//     vehicleRepo.ListVehicles()
+//         .then(list => {
+//             response.json(list);
+//         })
+//         .catch(err => response.status(404).json({ error: err }));
+// });
 router.get("/stops", function (request, response) {
     routeRepo.ListStops(RMDateNow())
         .then(list => {

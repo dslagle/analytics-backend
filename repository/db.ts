@@ -19,6 +19,10 @@ export class DB {
         this._connection = new Connection(config);
     }
 
+    static NotNullable = { nullable: false };
+    static Nullable = { nullable: true };
+    static PrimaryKey = { primary: true };
+
     Prepare(query: string, inputs?: any): Promise<PreparedStatement> {
         return new Promise<PreparedStatement>((resolve, reject) => {
             const ps = new PreparedStatement(this._connection);
@@ -43,55 +47,47 @@ export class DB {
         });
     }
 
+    BulkInsert(rows: SQL.Table) {
+        const request: Request = new Request(this._connection);
+        
+        return request.bulk(rows);
+    }
+
     Stream<T>(command: string, args?: QueryArg[]): EventEmitter {
         const request: Request = new Request(this._connection);
         request.stream = true;
 
-        if (args) {
-            for (const item of args) {
-                request.input(item.name, item.type, item.value);
-            }
-        }
-
-        request.query<T>(command);
+        this.AddArgs(request, args).query<T>(command);
         return <EventEmitter>request;
     }
 
     Query<T>(command: string, args?: QueryArg[]): Promise<T[]> {
         const request: Request = new Request(this._connection);
 
-        if (args) {
-            for (const item of args) {
-                request.input(item.name, item.type, item.value);
-            }
-        }
-
-        return request.query<T>(command);
+        return this.AddArgs(request, args).query<T>(command);
     }
 
     QueryMultiple(command: string, args?: QueryArg[]): Promise<any> {
         const request: Request = new Request(this._connection);
         request.multiple = true;
 
-        if (args) {
-            for (const item of args) {
-                request.input(item.name, item.type, item.value);
-            }
-        }
-
-        return request.query(command);
+        return this.AddArgs(request, args).query(command);
     }
 
     Execute<T>(sp: string, args?: QueryArg[]): Promise<T[]> {
         const request: Request = new Request(this._connection);
         
+        return this.AddArgs(request, args).execute(sp);
+    }
+
+    AddArgs(request: Request, args: QueryArg[]): Request {
         if (args) {
             for (const item of args) {
                 request.input(item.name, item.type, item.value);
             }
         }
 
-        return request.execute(sp);
+        return request;
     }
 
     Close(): Promise<void> {
