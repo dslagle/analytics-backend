@@ -3,9 +3,10 @@ import * as path from "path";
 import * as bp from "body-parser";
 import * as http from "http";
 import * as sio from "socket.io";
-import { DataRouter } from "./routes/data.router";
+import { router } from "./routes/test.router";
+//import { DataRouter } from "./routes/data.router";
 
-let app = express();
+let app: express.Application = express();
 
 const address: string = "localhost";
 const port: number = 9000;
@@ -23,7 +24,8 @@ app.use(function(request, response, next) {
     next();
 });
 
-app.use('/data', DataRouter(io));
+//app.use('/data', DataRouter(io));
+app.use("/test", router);
 
 server.listen(port, () => {
     console.log(`Listening @ ${address}:${port}`);

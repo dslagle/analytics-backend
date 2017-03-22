@@ -2,7 +2,8 @@
 const express = require("express");
 const bp = require("body-parser");
 const http = require("http");
-const data_router_1 = require("./routes/data.router");
+const test_router_1 = require("./routes/test.router");
+//import { DataRouter } from "./routes/data.router";
 let app = express();
 const address = "localhost";
 const port = 9000;
@@ -16,8 +17,8 @@ app.use(function (request, response, next) {
     response.setHeader("Access-Control-Allow-Headers", "Content-Type");
     next();
 });
-app.use('/data', data_router_1.DataRouter(io));
+//app.use('/data', DataRouter(io));
+app.use("/test", test_router_1.router);
 server.listen(port, () => {
     console.log(`Listening @ ${address}:${port}`);
 });
-//# sourceMappingURL=server.js.map
